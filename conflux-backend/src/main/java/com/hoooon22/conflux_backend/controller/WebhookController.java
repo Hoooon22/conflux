@@ -48,4 +48,30 @@ public class WebhookController {
 
         return "Webhook received successfully";
     }
+
+    @PostMapping("/custom")
+    public String receiveCustomWebhook(@RequestBody Map<String, Object> payload) {
+        System.out.println("🎨 Custom Webhook Received!");
+        System.out.println("Payload: " + payload);
+
+        // Custom webhook payload 파싱
+        String title = (String) payload.getOrDefault("title", "Custom Notification");
+        String message = (String) payload.getOrDefault("message", "No message provided");
+        String status = (String) payload.getOrDefault("status", "success");
+
+        // DTO 생성 및 저장
+        NotificationDto notification = NotificationDto.builder()
+                .source("Custom")
+                .title(title)
+                .message(message)
+                .repository(null)
+                .sender("Custom")
+                .timestamp(LocalDateTime.now())
+                .status(status)
+                .build();
+
+        notificationService.addNotification(notification);
+
+        return "Custom webhook received successfully";
+    }
 }

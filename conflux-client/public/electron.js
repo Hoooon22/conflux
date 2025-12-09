@@ -30,7 +30,8 @@ function createWindow() {
     // 개발 모드에서 DevTools 자동 열기 (선택사항)
     // mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, 'index.html'));
+    // 프로덕션: React 빌드 결과물 (build/index.html) 로드
+    mainWindow.loadFile(path.join(__dirname, '../build/index.html'));
   }
 
   // 윈도우가 닫힐 때 참조 제거

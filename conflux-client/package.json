@@ -2,7 +2,9 @@
   "name": "conflux-client",
   "version": "0.1.0",
   "private": true,
-  "main": "public/main.js",
+  "description": "Conflux - Where all streams merge. Unified Notification Inbox for Developers.",
+  "author": "DevZip <conflux@devzip.com>",
+  "main": "public/electron.js",
   "homepage": "./",
   "dependencies": {
     "react": "^18.2.0",
@@ -16,7 +18,8 @@
     "eject": "react-scripts eject",
     "electron": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
     "electron-build": "npm run build && electron-builder",
-    "electron-pack": "electron-builder --dir"
+    "electron-pack": "electron-builder --dir",
+    "dist": "npm run build && electron-builder"
   },
   "eslintConfig": {
     "extends": [
@@ -47,11 +50,12 @@
     "productName": "Conflux",
     "files": [
       "build/**/*",
-      "public/main.js",
+      "public/electron.js",
       "node_modules/**/*"
     ],
     "directories": {
-      "buildResources": "public"
+      "buildResources": "public",
+      "output": "dist"
     },
     "mac": {
       "category": "public.app-category.productivity",

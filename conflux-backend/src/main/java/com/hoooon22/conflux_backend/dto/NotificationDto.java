@@ -10,6 +10,11 @@ import lombok.Data;
 public class NotificationDto {
 
     /**
+     * 알림 ID (DB PK, 읽음/삭제에 사용)
+     */
+    private Long id;
+
+    /**
      * 알림 소스 (예: "GitHub", "Jira", "Slack", "Sentry", "HealthCheck", "Custom")
      */
     private String source;

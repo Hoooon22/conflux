@@ -1,0 +1,125 @@
+/* NotificationCard Styles - Linear Design */
+.notification-card {
+  background-color: #0f0f0f;
+  border: 1px solid #1f1f1f;
+  border-left: 3px solid;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+  position: relative;
+  cursor: default;
+}
+
+.notification-card:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: #2a2a2a;
+  transform: translateY(-1px);
+}
+
+.notification-card.unread {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.unread-dot {
+  position: absolute;
+  top: 20px;
+  right: 16px;
+  width: 8px;
+  height: 8px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.notification-source {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.notification-time {
+  font-size: 12px;
+  color: #666;
+}
+
+.notification-title {
+  color: #eee;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.notification-card.unread .notification-title {
+  font-weight: 700;
+}
+
+.notification-message {
+  color: #bbb;
+  font-size: 14px;
+  margin: 0 0 12px 0;
+  line-height: 1.6;
+}
+
+.notification-footer {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.notification-meta {
+  font-size: 12px;
+  color: #777;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 액션 버튼 */
+.notification-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+  background-color: #0a0a0a;
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid #2a2a2a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  color: #888;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.read-btn:hover {
+  color: #22c55e;
+}
+
+.delete-btn:hover {
+  color: #ef4444;
+}

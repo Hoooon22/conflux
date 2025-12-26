@@ -1,0 +1,92 @@
+/* Sidebar Styles - Linear Design */
+.sidebar {
+  width: 250px;
+  background-color: #0a0a0a;
+  border-right: 1px solid #1f1f1f;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+.logo {
+  margin-bottom: 32px;
+}
+
+.logo h1 {
+  color: #eee;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.5px;
+}
+
+.tagline {
+  color: #888;
+  font-size: 12px;
+  margin: 0;
+}
+
+.menu {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-item {
+  background: none;
+  border: none;
+  color: #888;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #eee;
+}
+
+.menu-item.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #eee;
+}
+
+.menu-item .icon {
+  flex-shrink: 0;
+}
+
+.stats {
+  border-top: 1px solid #1f1f1f;
+  padding-top: 16px;
+  margin-top: 16px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  font-size: 13px;
+}
+
+.stat-label {
+  color: #888;
+}
+
+.stat-value {
+  color: #eee;
+  font-weight: 600;
+  font-size: 16px;
+}

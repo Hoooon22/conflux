@@ -6,8 +6,8 @@ let mainWindow;
 function createWindow() {
   // Electron 브라우저 윈도우 생성
   mainWindow = new BrowserWindow({
-    width: 400,
-    height: 800,
+    width: 1400,
+    height: 900,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

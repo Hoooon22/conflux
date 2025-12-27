@@ -46,9 +46,9 @@ function Settings() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [newIntegration, setNewIntegration] = useState({
     name: '',
-    type: 'webhook',
+    type: 'healthcheck',
     url: '',
-    method: 'POST',
+    method: 'GET',
     interval: 60
   });
 
@@ -96,9 +96,9 @@ function Settings() {
     setShowAddModal(false);
     setNewIntegration({
       name: '',
-      type: 'webhook',
+      type: 'healthcheck',
       url: '',
-      method: 'POST',
+      method: 'GET',
       interval: 60
     });
   };
@@ -305,8 +305,8 @@ function Settings() {
                   value={newIntegration.type}
                   onChange={(e) => setNewIntegration({ ...newIntegration, type: e.target.value })}
                 >
-                  <option value="webhook">Webhook (수신)</option>
                   <option value="healthcheck">Health Check (발신)</option>
+                  <option value="webhook">Webhook (수신)</option>
                 </select>
               </div>
 
@@ -391,8 +391,8 @@ function Settings() {
                   onChange={(e) => setEditingIntegration({ ...editingIntegration, type: e.target.value })}
                   disabled={editingIntegration.isDefault}
                 >
-                  <option value="webhook">Webhook (수신)</option>
                   <option value="healthcheck">Health Check (발신)</option>
+                  <option value="webhook">Webhook (수신)</option>
                 </select>
               </div>
 

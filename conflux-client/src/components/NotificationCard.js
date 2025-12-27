@@ -44,7 +44,14 @@ function NotificationCard({ notification, onMarkAsRead, onDelete }) {
 
       <div className="notification-header">
         <span className="notification-source">{notification.source}</span>
-        <span className="notification-time">{formatTimestamp(notification.timestamp)}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {notification.count > 1 && (
+            <span className="notification-count" title={`${notification.count}개의 동일한 알림`}>
+              ×{notification.count}
+            </span>
+          )}
+          <span className="notification-time">{formatTimestamp(notification.timestamp)}</span>
+        </div>
       </div>
 
       <h3 className="notification-title">{notification.title}</h3>

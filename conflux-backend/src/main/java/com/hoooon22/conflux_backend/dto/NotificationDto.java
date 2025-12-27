@@ -48,4 +48,9 @@ public class NotificationDto {
      * 알림 상태 (예: "success", "fail", "warning")
      */
     private String status;
+
+    /**
+     * 중복 알림 카운트 (같은 알림이 여러 번 온 횟수)
+     */
+    private Integer count;
 }

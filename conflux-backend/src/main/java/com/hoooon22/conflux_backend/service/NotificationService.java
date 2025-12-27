@@ -23,12 +23,29 @@ public class NotificationService {
 
     /**
      * 알림을 저장합니다 (DTO → Entity 변환 후 DB 저장)
+     * 중복 알림이 있으면 카운트를 증가시키고 시간을 업데이트합니다.
      */
     @Transactional
     public void addNotification(NotificationDto dto) {
-        Notification entity = dtoToEntity(dto);
-        notificationRepository.save(entity);
-        log.info("✅ Notification saved to DB: {}", entity);
+        // 같은 알림이 이미 있는지 확인
+        var existingNotification = notificationRepository
+                .findFirstBySourceAndTitleAndMessageOrderByTimestampDesc(
+                        dto.getSource(), dto.getTitle(), dto.getMessage());
+
+        if (existingNotification.isPresent()) {
+            // 중복 알림: 카운트 증가 + 시간 업데이트 + 읽지 않음 상태로 변경
+            Notification existing = existingNotification.get();
+            existing.setCount(existing.getCount() + 1);
+            existing.setTimestamp(dto.getTimestamp());
+            existing.setStatus(NotificationStatus.UNREAD); // 다시 읽지 않음 상태로
+            notificationRepository.save(existing);
+            log.info("🔄 Duplicate notification updated. Count: {}, ID: {}", existing.getCount(), existing.getId());
+        } else {
+            // 새로운 알림: 저장
+            Notification entity = dtoToEntity(dto);
+            notificationRepository.save(entity);
+            log.info("✅ New notification saved to DB: {}", entity);
+        }
     }
 
     /**
@@ -104,6 +121,7 @@ public class NotificationService {
                 .sender(entity.getSender())
                 .timestamp(entity.getTimestamp())
                 .status(entity.getStatus().name()) // Enum을 String으로 변환
+                .count(entity.getCount()) // 카운트 추가
                 .build();
     }
 }

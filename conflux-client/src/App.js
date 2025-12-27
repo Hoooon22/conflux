@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import NotificationList from './components/NotificationList';
+import Settings from './components/Settings';
 import './App.css';
 
 function App() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentView, setCurrentView] = useState('inbox');
 
   // 백엔드 API에서 알림 가져오기
   const fetchNotifications = async () => {
@@ -79,26 +81,50 @@ function App() {
   return (
     <div className="app">
       {/* 왼쪽 사이드바 */}
-      <Sidebar notificationCount={notifications.length} />
+      <Sidebar
+        notificationCount={notifications.length}
+        currentView={currentView}
+        onViewChange={setCurrentView}
+      />
 
-      {/* 오른쪽 메인 타임라인 */}
+      {/* 오른쪽 메인 영역 */}
       <main className="main-content">
-        <header className="header">
-          <h2>Notification Stream</h2>
-          <div className="status-indicator">
-            <span className="status-dot"></span>
-            <span>Live</span>
-          </div>
-        </header>
+        {currentView === 'inbox' && (
+          <>
+            <header className="header">
+              <h2>Notification Stream</h2>
+              <div className="status-indicator">
+                <span className="status-dot"></span>
+                <span>Live</span>
+              </div>
+            </header>
 
-        {/* 알림 타임라인 */}
-        <NotificationList
-          notifications={notifications}
-          loading={loading}
-          error={error}
-          onMarkAsRead={handleMarkAsRead}
-          onDelete={handleDelete}
-        />
+            {/* 알림 타임라인 */}
+            <NotificationList
+              notifications={notifications}
+              loading={loading}
+              error={error}
+              onMarkAsRead={handleMarkAsRead}
+              onDelete={handleDelete}
+            />
+          </>
+        )}
+
+        {currentView === 'focus' && (
+          <div className="placeholder-view">
+            <h2>🎯 Focus Mode</h2>
+            <p>중요한 알림만 표시됩니다 (개발 예정)</p>
+          </div>
+        )}
+
+        {currentView === 'projects' && (
+          <div className="placeholder-view">
+            <h2>📦 Projects</h2>
+            <p>프로젝트별 알림 관리 (개발 예정)</p>
+          </div>
+        )}
+
+        {currentView === 'settings' && <Settings />}
       </main>
     </div>
   );

@@ -1,93 +1,162 @@
 package com.hoooon22.conflux_backend.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.stream.Collectors;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import com.hoooon22.conflux_backend.domain.HealthCheck;
+import com.hoooon22.conflux_backend.dto.HealthCheckDto;
 import com.hoooon22.conflux_backend.dto.NotificationDto;
+import com.hoooon22.conflux_backend.repository.HealthCheckRepository;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class HealthCheckService {
 
+    private final HealthCheckRepository healthCheckRepository;
     private final NotificationService notificationService;
-    private final RestTemplate restTemplate;
+    private final ThreadPoolTaskScheduler taskScheduler;
+    private final RestTemplate restTemplate = new RestTemplate();
 
-    // 헬스 체크 대상 URL 목록 (확장 가능)
-    private final String[] healthCheckUrls = {
-        "https://www.google.com",
-        // 필요시 추가 URL을 여기에 추가
-        // "https://github.com",
-        // "http://localhost:8080/actuator/health"
-    };
+    private final Map<Long, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
 
-    public HealthCheckService(NotificationService notificationService) {
-        this.notificationService = notificationService;
-        this.restTemplate = new RestTemplate();
+    @PostConstruct
+    public void initializeScheduledTasks() {
+        log.info("🔄 Initializing Health Check Scheduler...");
+        List<HealthCheck> activeChecks = healthCheckRepository.findByEnabled(true);
+        activeChecks.forEach(this::scheduleHealthCheck);
+        log.info("✅ {} Health Checks scheduled", activeChecks.size());
     }
 
-    /**
-     * 1분마다 헬스 체크를 수행합니다.
-     * fixedRate = 60000ms (60초)
-     */
-    @Scheduled(fixedRate = 60000)
-    public void performHealthCheck() {
-        System.out.println("🏥 Starting health check at: " + LocalDateTime.now());
+    @PreDestroy
+    public void shutdownScheduledTasks() {
+        log.info("🛑 Shutting down Health Check Scheduler...");
+        scheduledTasks.values().forEach(task -> task.cancel(false));
+        scheduledTasks.clear();
+    }
 
-        for (String url : healthCheckUrls) {
-            checkUrl(url);
+    @Transactional
+    public HealthCheckDto registerHealthCheck(HealthCheckDto dto) {
+        HealthCheck entity = HealthCheck.builder()
+                .name(dto.getName())
+                .url(dto.getUrl())
+                .method(dto.getMethod())
+                .intervalSeconds(dto.getIntervalSeconds())
+                .enabled(true)
+                .build();
+
+        HealthCheck saved = healthCheckRepository.save(entity);
+        log.info("✅ Health Check registered: {}", saved.getName());
+
+        scheduleHealthCheck(saved);
+
+        return entityToDto(saved);
+    }
+
+    @Transactional
+    public void deleteHealthCheck(Long id) {
+        if (!healthCheckRepository.existsById(id)) {
+            throw new IllegalArgumentException("Health Check not found: " + id);
         }
+
+        cancelScheduledTask(id);
+        healthCheckRepository.deleteById(id);
+        log.info("🗑️ Health Check deleted: {}", id);
     }
 
-    /**
-     * 개별 URL에 대한 헬스 체크를 수행합니다.
-     */
-    private void checkUrl(String url) {
+    @Transactional(readOnly = true)
+    public List<HealthCheckDto> getAllHealthChecks() {
+        return healthCheckRepository.findAll().stream()
+                .map(this::entityToDto)
+                .collect(Collectors.toList());
+    }
+
+    private void scheduleHealthCheck(HealthCheck healthCheck) {
+        if (scheduledTasks.containsKey(healthCheck.getId())) {
+            log.warn("⚠️ Health Check already scheduled: {}", healthCheck.getName());
+            return;
+        }
+
+        long intervalMillis = healthCheck.getIntervalSeconds() * 1000L;
+
+        ScheduledFuture<?> task = taskScheduler.scheduleAtFixedRate(
+                () -> performHealthCheck(healthCheck),
+                intervalMillis
+        );
+
+        scheduledTasks.put(healthCheck.getId(), task);
+        log.info("⏰ Health Check scheduled: {} (every {}s)", healthCheck.getName(), healthCheck.getIntervalSeconds());
+    }
+
+    private void performHealthCheck(HealthCheck healthCheck) {
         try {
-            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            HttpMethod method = HttpMethod.valueOf(healthCheck.getMethod().toUpperCase());
+            ResponseEntity<String> response = restTemplate.exchange(
+                    healthCheck.getUrl(),
+                    method,
+                    null,
+                    String.class
+            );
+
             int statusCode = response.getStatusCode().value();
 
-            if (statusCode == 200) {
-                System.out.println("✅ Health check passed for: " + url + " (Status: " + statusCode + ")");
+            if (statusCode >= 200 && statusCode < 300) {
+                log.debug("✅ Health Check OK: {} - {}", healthCheck.getName(), statusCode);
             } else {
-                System.out.println("⚠️ Health check warning for: " + url + " (Status: " + statusCode + ")");
-                createHealthCheckNotification(url, statusCode, "warning");
+                log.warn("⚠️ Health Check WARNING: {} - {}", healthCheck.getName(), statusCode);
+                createHealthCheckNotification(healthCheck, "WARNING", "Status code: " + statusCode);
             }
-
         } catch (Exception e) {
-            System.err.println("❌ Health check failed for: " + url);
-            System.err.println("Error: " + e.getMessage());
-            createHealthCheckNotification(url, 0, "fail");
+            log.error("❌ Health Check FAILED: {} - {}", healthCheck.getName(), e.getMessage());
+            createHealthCheckNotification(healthCheck, "FAILED", e.getMessage());
         }
     }
 
-    /**
-     * 헬스 체크 실패 시 알림을 생성합니다.
-     */
-    private void createHealthCheckNotification(String url, int statusCode, String status) {
+    private void createHealthCheckNotification(HealthCheck healthCheck, String status, String message) {
         NotificationDto notification = NotificationDto.builder()
                 .source("HealthCheck")
-                .title("Health Check Alert: " + url)
-                .message(statusCode == 0
-                    ? "Service unreachable or error occurred"
-                    : "Unexpected status code: " + statusCode)
-                .repository(url)
+                .title(healthCheck.getName() + " - " + status)
+                .message(message)
+                .repository(healthCheck.getUrl())
                 .sender("System")
                 .timestamp(LocalDateTime.now())
-                .status(status)
                 .build();
 
         notificationService.addNotification(notification);
-        System.out.println("🚨 Health check notification created for: " + url);
     }
 
-    /**
-     * 테스트용: 즉시 헬스 체크를 수행합니다.
-     */
-    public void performImmediateHealthCheck() {
-        System.out.println("🔧 Manual health check triggered");
-        performHealthCheck();
+    private void cancelScheduledTask(Long healthCheckId) {
+        ScheduledFuture<?> task = scheduledTasks.remove(healthCheckId);
+        if (task != null) {
+            task.cancel(false);
+            log.info("⏹️ Health Check unscheduled: {}", healthCheckId);
+        }
+    }
+
+    private HealthCheckDto entityToDto(HealthCheck entity) {
+        return HealthCheckDto.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .url(entity.getUrl())
+                .method(entity.getMethod())
+                .intervalSeconds(entity.getIntervalSeconds())
+                .enabled(entity.getEnabled())
+                .build();
     }
 }

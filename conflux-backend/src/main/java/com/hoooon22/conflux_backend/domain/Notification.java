@@ -76,4 +76,11 @@ public class Notification {
     @Column(nullable = false)
     @Builder.Default
     private NotificationStatus status = NotificationStatus.UNREAD;
+
+    /**
+     * 중복 알림 카운트 (같은 알림이 여러 번 올 때 증가)
+     */
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer count = 1;
 }

@@ -52,6 +52,17 @@
   color: #666;
 }
 
+.notification-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: inline-block;
+  box-shadow: 0 2px 6px rgba(168, 85, 247, 0.3);
+}
+
 .notification-title {
   color: #eee;
   font-size: 16px;

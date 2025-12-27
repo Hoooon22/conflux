@@ -70,6 +70,31 @@ public class HealthCheckService {
     }
 
     @Transactional
+    public HealthCheckDto updateHealthCheck(Long id, HealthCheckDto dto) {
+        HealthCheck existing = healthCheckRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Health Check not found: " + id));
+
+        // 기존 스케줄 취소
+        cancelScheduledTask(id);
+
+        // 정보 업데이트
+        existing.setName(dto.getName());
+        existing.setUrl(dto.getUrl());
+        existing.setMethod(dto.getMethod());
+        existing.setIntervalSeconds(dto.getIntervalSeconds());
+
+        HealthCheck updated = healthCheckRepository.save(existing);
+        log.info("✏️ Health Check updated: {}", updated.getName());
+
+        // 새로운 스케줄 등록
+        if (updated.getEnabled()) {
+            scheduleHealthCheck(updated);
+        }
+
+        return entityToDto(updated);
+    }
+
+    @Transactional
     public void deleteHealthCheck(Long id) {
         if (!healthCheckRepository.existsById(id)) {
             throw new IllegalArgumentException("Health Check not found: " + id);

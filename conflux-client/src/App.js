@@ -9,6 +9,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentView, setCurrentView] = useState('inbox');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   // 백엔드 API에서 알림 가져오기
   const fetchNotifications = async () => {
@@ -78,6 +79,15 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // 카테고리 필터링된 알림
+  const filteredNotifications = notifications.filter(notification => {
+    if (categoryFilter === 'all') return true;
+    if (categoryFilter === 'github') return notification.source === 'GitHub';
+    if (categoryFilter === 'healthcheck') return notification.source === 'HealthCheck';
+    if (categoryFilter === 'custom') return notification.source === 'Custom';
+    return true;
+  });
+
   return (
     <div className="app">
       {/* 왼쪽 사이드바 */}
@@ -99,9 +109,37 @@ function App() {
               </div>
             </header>
 
+            {/* 카테고리 필터 */}
+            <div className="category-filter">
+              <button
+                className={`filter-btn ${categoryFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setCategoryFilter('all')}
+              >
+                전체 ({notifications.length})
+              </button>
+              <button
+                className={`filter-btn ${categoryFilter === 'github' ? 'active' : ''}`}
+                onClick={() => setCategoryFilter('github')}
+              >
+                GitHub ({notifications.filter(n => n.source === 'GitHub').length})
+              </button>
+              <button
+                className={`filter-btn ${categoryFilter === 'healthcheck' ? 'active' : ''}`}
+                onClick={() => setCategoryFilter('healthcheck')}
+              >
+                Health Check ({notifications.filter(n => n.source === 'HealthCheck').length})
+              </button>
+              <button
+                className={`filter-btn ${categoryFilter === 'custom' ? 'active' : ''}`}
+                onClick={() => setCategoryFilter('custom')}
+              >
+                Custom ({notifications.filter(n => n.source === 'Custom').length})
+              </button>
+            </div>
+
             {/* 알림 타임라인 */}
             <NotificationList
-              notifications={notifications}
+              notifications={filteredNotifications}
               loading={loading}
               error={error}
               onMarkAsRead={handleMarkAsRead}

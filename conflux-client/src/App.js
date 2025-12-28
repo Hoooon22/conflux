@@ -9,7 +9,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentView, setCurrentView] = useState('inbox');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  // 다중 선택 가능한 카테고리 필터 (기본값: 모든 카테고리 선택)
+  const [selectedCategories, setSelectedCategories] = useState(['GitHub', 'HealthCheck', 'Custom']);
 
   // 백엔드 API에서 알림 가져오기
   const fetchNotifications = async () => {
@@ -79,13 +80,35 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // 카테고리 토글 함수
+  const toggleCategory = (category) => {
+    setSelectedCategories(prev => {
+      if (prev.includes(category)) {
+        // 이미 선택된 경우 제거 (단, 최소 1개는 선택되어 있어야 함)
+        const newCategories = prev.filter(c => c !== category);
+        return newCategories.length > 0 ? newCategories : prev;
+      } else {
+        // 선택되지 않은 경우 추가
+        return [...prev, category];
+      }
+    });
+  };
+
+  // 전체 선택/해제 함수
+  const toggleAll = () => {
+    const allCategories = ['GitHub', 'HealthCheck', 'Custom'];
+    if (selectedCategories.length === allCategories.length) {
+      // 전체가 선택되어 있으면 하나만 남기기 (GitHub)
+      setSelectedCategories(['GitHub']);
+    } else {
+      // 전체 선택
+      setSelectedCategories(allCategories);
+    }
+  };
+
   // 카테고리 필터링된 알림
   const filteredNotifications = notifications.filter(notification => {
-    if (categoryFilter === 'all') return true;
-    if (categoryFilter === 'github') return notification.source === 'GitHub';
-    if (categoryFilter === 'healthcheck') return notification.source === 'HealthCheck';
-    if (categoryFilter === 'custom') return notification.source === 'Custom';
-    return true;
+    return selectedCategories.includes(notification.source);
   });
 
   return (
@@ -109,30 +132,42 @@ function App() {
               </div>
             </header>
 
-            {/* 카테고리 필터 */}
+            {/* 카테고리 필터 - 체크박스 방식 */}
             <div className="category-filter">
               <button
-                className={`filter-btn ${categoryFilter === 'all' ? 'active' : ''}`}
-                onClick={() => setCategoryFilter('all')}
+                className={`filter-btn ${selectedCategories.length === 3 ? 'active' : ''}`}
+                onClick={toggleAll}
               >
+                <span className="checkbox-icon">
+                  {selectedCategories.length === 3 ? '☑' : '☐'}
+                </span>
                 전체 ({notifications.length})
               </button>
               <button
-                className={`filter-btn ${categoryFilter === 'github' ? 'active' : ''}`}
-                onClick={() => setCategoryFilter('github')}
+                className={`filter-btn ${selectedCategories.includes('GitHub') ? 'active' : ''}`}
+                onClick={() => toggleCategory('GitHub')}
               >
+                <span className="checkbox-icon">
+                  {selectedCategories.includes('GitHub') ? '☑' : '☐'}
+                </span>
                 GitHub ({notifications.filter(n => n.source === 'GitHub').length})
               </button>
               <button
-                className={`filter-btn ${categoryFilter === 'healthcheck' ? 'active' : ''}`}
-                onClick={() => setCategoryFilter('healthcheck')}
+                className={`filter-btn ${selectedCategories.includes('HealthCheck') ? 'active' : ''}`}
+                onClick={() => toggleCategory('HealthCheck')}
               >
+                <span className="checkbox-icon">
+                  {selectedCategories.includes('HealthCheck') ? '☑' : '☐'}
+                </span>
                 Health Check ({notifications.filter(n => n.source === 'HealthCheck').length})
               </button>
               <button
-                className={`filter-btn ${categoryFilter === 'custom' ? 'active' : ''}`}
-                onClick={() => setCategoryFilter('custom')}
+                className={`filter-btn ${selectedCategories.includes('Custom') ? 'active' : ''}`}
+                onClick={() => toggleCategory('Custom')}
               >
+                <span className="checkbox-icon">
+                  {selectedCategories.includes('Custom') ? '☑' : '☐'}
+                </span>
                 Custom ({notifications.filter(n => n.source === 'Custom').length})
               </button>
             </div>

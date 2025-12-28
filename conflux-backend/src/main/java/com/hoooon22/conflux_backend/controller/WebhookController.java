@@ -74,4 +74,39 @@ public class WebhookController {
 
         return "Custom webhook received successfully";
     }
+
+    @PostMapping("/github-actions")
+    public String receiveGitHubActionsWebhook(@RequestBody Map<String, Object> payload) {
+        System.out.println("🚀 GitHub Actions Webhook Received!");
+        System.out.println("Payload: " + payload);
+
+        // GitHub Actions webhook payload 파싱
+        String workflowName = (String) payload.getOrDefault("workflow", "Unknown Workflow");
+        String status = (String) payload.getOrDefault("status", "unknown");
+        String conclusion = (String) payload.getOrDefault("conclusion", "");
+        String repository = (String) payload.getOrDefault("repository", "Unknown Repository");
+        String branch = (String) payload.getOrDefault("branch", "main");
+        String actor = (String) payload.getOrDefault("actor", "Unknown");
+
+        // 상태에 따라 메시지 생성
+        String message = String.format("Workflow '%s' %s on branch '%s'",
+            workflowName,
+            conclusion.isEmpty() ? status : conclusion,
+            branch);
+
+        // DTO 생성 및 저장
+        NotificationDto notification = NotificationDto.builder()
+                .source("GitHub")  // GitHub Actions도 GitHub 카테고리로 통합
+                .title("🚀 " + workflowName + " - " + status)
+                .message(message)
+                .repository(repository)
+                .sender(actor)
+                .timestamp(LocalDateTime.now())
+                .status(conclusion.equals("success") ? "success" : "failed")
+                .build();
+
+        notificationService.addNotification(notification);
+
+        return "GitHub Actions webhook received successfully";
+    }
 }

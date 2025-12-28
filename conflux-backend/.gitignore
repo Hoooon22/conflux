@@ -50,3 +50,11 @@ spring-shell.log
 .env
 application-local.yml
 application-local.properties
+
+# H2 Database files
+*.mv.db
+*.trace.db
+*.db
+data/
+confluxdb.mv.db
+confluxdb.trace.db
